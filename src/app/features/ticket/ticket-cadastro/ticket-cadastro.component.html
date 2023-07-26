@@ -1,0 +1,161 @@
+<app-header-breadcrumb></app-header-breadcrumb>
+<form #f="ngForm" autocomplete="off" (ngSubmit)="salvar(f)">
+<p-panel [header]="ticket.id === null ? 'Abertura de Ticket' : 'Tícket nº ' + ticket.numeroTicket+'/'+ticket.anoTicketGerado">
+
+  <div class="p-col-12 p-md-6 p-fluid">
+    <label>Assunto *</label>
+    <input pInputText type="text" name="empresa" [disabled]="ticket.status !== 1"
+      [(ngModel)]="ticket.assunto"
+      #empresa="ngModel" required minlength="3">
+  </div>
+
+  <div class="p-col-12 p-md-6 p-fluid">
+    <label>Tipo *</label>
+    <p-dropdown name="codigoTipo" [options]="listaTicket" [disabled]="ticket.status !== 1"
+      placeholder="Selecione"
+      [(ngModel)]="ticket.codigoTipo"
+      required></p-dropdown>
+  </div>
+
+  <div class="p-col-12 p-md-6 p-fluid">
+    <label>Prioridade *</label>
+    <p-dropdown name="codigoPrioridade" [options]="listaPrioridade" [disabled]="ticket.status !== 1"
+      placeholder="Selecione"
+      [(ngModel)]="ticket.codigoPrioridade"
+      required></p-dropdown>
+  </div>  
+
+  <div class="p-col-12 p-md-6 p-fluid">
+    <label>Status *</label>
+    <p-dropdown name="status" [disabled]="true" [options]="listaStatus" 
+      placeholder="Selecione"
+      [(ngModel)]="ticket.status"
+      required></p-dropdown>
+  </div>
+
+
+    <div class="p-col-12 p-md-9 p-fluid">
+      <label>Descrição do problema *</label>
+      <p-editor [(ngModel)]="ticket.descricao"
+      name="descricao"
+      required
+      [readonly]="ticket.status !== 1"
+      [style]="{'height':'130px'}"></p-editor>
+    </div>
+
+    <div class="p-field p-col-9 p-fluid">
+      <p-table [value]="complementosTicket" [responsive]="true">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Complemento tícket</th>
+            <th>Data</th>
+            <th>Enviado por</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-complementoTicket>
+          <tr>
+            <td>
+              {{complementoTicket.descricaoComplemento}}
+            </td>
+            <td>
+              {{complementoTicket.data | date:'dd/MM/yyyy HH:mm'}}
+            </td>
+            <td>
+              {{complementoTicket.descricaoUsuario}}
+            </td>            
+            <td>
+              <button pButton type="button"  (click)="visualizarComplementoTicket(complementoTicket.id)" 
+              icon="pi pi-folder-open"></button>&nbsp;
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+      </div>
+
+    <div [hidden]="ticket.status !== 4 && ticket.status !== 5">
+    <div class="p-col-12 p-md-9 p-fluid">
+      <label>Solução do tícket *</label>
+      <p-editor [(ngModel)]="ticket.descricaoSolucao"
+      name="descricaoSolucaoTicket"
+      [readonly]="true"
+      [style]="{'height':'130px'}"></p-editor>
+    </div> 
+    </div> 
+
+        <div class="p-field p-col-9">
+              <p-fileUpload name="anexo" #fileUpload [auto]="true" id="anexo" [disabled]="ticket.status === 4 || ticket.status === 5"
+              invalidFileSizeMessageDetail="O tamanho máximo permitido de arquivos é de 10" multiple="true"
+               [customUpload]="true" chooseLabel="Selecione o arquivo"   (uploadHandler)="carregaArquivo($event)" 
+               accept="image/*,application/*" [maxFileSize]="5000000">
+              <ng-template pTemplate="content">
+                  <ul *ngIf="uploadedFiles.length">
+                      <li  *ngFor="let file of uploadedFiles">{{file.name}}</li>
+                  </ul>
+              </ng-template>
+            </p-fileUpload>
+          </div>
+          <div class="p-field p-col-9">
+          <p-table [value]="anexos" [responsive]="true">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 100px;">Nome do arquivo</th>
+                <th style="width: 10px;"></th>
+                <th style="width: 10px;"></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-anexo>
+              <tr>
+                <td>
+                  {{anexo.nomeArquivo}}
+                </td>
+                <td>
+                  <button pButton type="button" (click)="download(anexo.nomeArquivo)" 
+                  icon="pi pi-arrow-circle-down"></button>&nbsp;
+                </td>   
+                <td>
+                  <button pButton type="button" [disabled]="ticket.status !== 1" (click)="excluirAnexo(anexo.id)" 
+                  icon="pi pi-trash"></button>&nbsp;
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+          </div>
+
+  
+  <p-footer>
+    <button pButton type="submit" label="Salvar" class="ui-button prime-button" [disabled]="f.invalid || ticket.status !== 1"></button>&nbsp;
+    <button pButton type="button" (click)="showComplementoTicket()" label="Complemento" class="ui-button prime-button" [disabled]="ticket.status === 4 || ticket.status === 5"></button>&nbsp;
+    <button pButton type="button" label="Voltar" class="ui-button-secondary prime-button" (click)="back()"></button>
+    &nbsp;&nbsp;&nbsp; * Campos obrigatórios
+  </p-footer>
+</p-panel>
+</form>
+
+<p-dialog [header]="'Complemento de Informções do Tícket: ' + ticket.numeroTicket+'/'+ticket.anoTicketGerado"
+  position="top" [(visible)]="displayModalComplemento"
+  [style]="{width: '50vw'}">
+
+  <form id="myFormComplemento" name="myFormComplemento" #myFormComplemento="ngForm" autocomplete="off"  (ngSubmit)="complementoTicket.id !== null ? responderComplemento() : salvarComplemento()">
+
+    <div class="p-col-9 p-md-9 p-fluid">    
+          <div class="p-field p-col-12">
+            <label>Descrição do complemento</label>
+            <textarea rows="7" cols="25" name="descricaoComplemento" [disabled]="complementoTicket.id !== null" [(ngModel)]="complementoTicket.descricaoComplemento"
+              #descricaoComplemento="ngModel" pInputTextarea></textarea>       
+          </div>
+
+          <div class="p-field p-col-12" [hidden]="complementoTicket.tipoComplemento === 2">
+            <label>Resposta do complemento</label>
+            <textarea rows="7" cols="25" name="descricaoResposta" [disabled]="complementoTicket.tipoComplemento === 2 || complementoTicket.id !== null" [(ngModel)]="complementoTicket.descricaoResposta"
+              #descricaoResposta="ngModel" pInputTextarea></textarea>       
+          </div>
+</div>
+   
+
+    <br/>
+    <button pButton type="submit" label="Salvar" [disabled]="complementoTicket.codigoUsuarioResposta !== null" class="ui-button-secondary prime-button"></button>
+    <button pButton type="button" label="Fechar" class="ui-button-secondary prime-button" (click)="onCloseComplementoTicket()"></button>
+
+  </form>
+</p-dialog>

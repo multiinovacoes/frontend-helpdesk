@@ -1,0 +1,77 @@
+<app-header-breadcrumb></app-header-breadcrumb>
+<form #f="ngForm" autocomplete="off">
+<p-panel header="Lista de Tíckets">
+
+  <div class="p-fluid p-formgrid p-grid">
+
+
+    <div class="p-field p-col-12">
+      <div class="p-formgroup-inline">
+        <div class="p-field-checkbox">
+          <p-radioButton name="pesquisaTodos"  value="0" (click)="listar()" [(ngModel)]="status"  inputId="pesquisaTodos"></p-radioButton>
+          <label>Todos</label>
+        </div>
+        <div class="p-field-checkbox">
+          <p-radioButton name="pesquisaAbertos" value="1" (click)="pesquisa()" [(ngModel)]="status"  inputId="pesquisaAbertos"></p-radioButton>
+          <label>Abertos</label>
+        </div>
+        <div class="p-field-checkbox">
+            <p-radioButton name="pesquisaAtendimentos" value="2" (click)="pesquisa()" [(ngModel)]="status"  inputId="pesquisaAtendimentos"></p-radioButton>
+            <label>Em atendimento</label>
+        </div>
+        <div class="p-field-checkbox">
+          <p-radioButton name="pesquisaComplemento" value="3" (click)="pesquisa()" [(ngModel)]="status"  inputId="pesquisaComplemento"></p-radioButton>
+          <label>Aguardando complemento</label>
+        </div>
+        <div class="p-field-checkbox">
+          <p-radioButton name="pesquisaFinalizados" value="4" (click)="pesquisa()" [(ngModel)]="status"  inputId="pesquisaFinalizados"></p-radioButton>
+          <label>Finalizados</label>
+        </div>
+    </div>
+  </div>
+  </div>
+
+
+        
+    <p-table [value]="tickets" [paginator]="true" [rows]="5"  styleClass="p-datatable-sm p-datatable-striped"
+    [responsive]="true" #tabela>
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Cliente</th>
+            <th>Assunto</th>
+            <th>Data Abertura</th>
+            <th>Solicitante</th>
+            <th>Status</th>
+            <th class="col-acoes"></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-ticket>
+            <tr class="col-status" [style.background-color]="ticket.status === 3 ?
+            '#FFFACD' : ticket.status === 4 ? '#7FFFD4' : ticket.status === 5 ? '#FF6347' : ''">
+                <td>
+                    {{ticket.descricaoCliente}}
+                </td>
+                <td>
+                    {{ticket.assunto}}
+                </td>
+                <td>
+                  {{ticket.dataAbertura | date:'dd/MM/yyyy HH:mm'}}
+                </td>
+                <td>
+                  {{ticket.descricaoUsuario}}
+                </td>                            
+                <td>
+                    {{ticket.descricaoStatus}}
+                </td>
+                <td class="col-acoes">
+                  <a pButton icon="pi pi-folder-open" pTooltip="Editar" tooltipPosition="top"
+                  (click)="editarTicket(ticket.id)"></a>
+                  <button pButton icon="pi pi-trash"
+                  type="button" pTooltip="Excluir" tooltipPosition="top" [disabled]="ticket.status === 4 || ticket.status === 5"
+                  (click)="confirmarExclusao(ticket)"></button>
+                  </td>
+              </tr>
+        </ng-template>
+    </p-table>
+</p-panel>
+</form>
